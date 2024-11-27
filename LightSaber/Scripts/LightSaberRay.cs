@@ -47,7 +47,7 @@ public class LightSaberRay : NetworkBehaviour
         {
             if (!collisionStarted)
             {
-                SpawnParticle(hitInfo.point);
+                SpawnLightSaberEffectServerRpc(hitInfo.point);
                 OnLightSaberRayHit.Invoke(hitInfo.point);
             }
             collisionStarted = true;
@@ -61,11 +61,20 @@ public class LightSaberRay : NetworkBehaviour
         Gizmos.DrawSphere(transform.position + (transform.forward * rayOffset), rayRadius);
     }
 
-    private void SpawnParticle(Vector3 position)
+    [ServerRpc(RequireOwnership = false)]
+    private void SpawnLightSaberEffectServerRpc(Vector3 position)
     {
+        // Change the material on the host
         var instance = Instantiate(onHitParticleEffectPrefab, position, Quaternion.identity);
         var instanceNetworkObject = instance.GetComponent<NetworkObject>();
         instanceNetworkObject.Spawn();
+        
+        PlaySparkSoundClientRpc();
+    }
+    
+    [ClientRpc]
+    private void PlaySparkSoundClientRpc()
+    {
         lightSaberAudioManager.PlayLightSaberSparkSound();
     }
 }
